@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        table {
+            font-family: Roboto, Verdana, Tahoma, sans;
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 16px;
+        }
+
+        td, th {
+            border: 1px solid #9b59b6;
+            text-align: left;
+            padding: 8px;
+        }
+        tr:nth-child(even) {
+            background-color:  #e6c7f2;
+        }
+        .button {
+            /* Сбрасываем дефолтные стили */
+            border: none;
+            outline: none;
+            display: inline-block;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 16px;
+            /* Можно также использовать любые встроенные и кастомные шрифты, например, отсюда  */
+            font-family: Roboto, Verdana, Tahoma, sans;
+            /* Тут можно поэкспериментировать */
+            padding: 12px 16px;
+            border-radius: 100px;
+            color: #fff;
+
+            margin-top: 15px;
+        }
+        .button i {
+            margin-right: 4px;
+        }
+        .button + .button {
+            margin-left: 1px;
+        }
+        .button.purple {
+            background: #9b59b6; width: 200px;
+        }
+        .button.white {
+            background: #f0d7fa; width: 100px;
+            margin-top: 0px;
+            color: #8f4bab;
+            border: 1px solid #8f4bab;
+        }
+        .button:hover {
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+
+        }
+        .button:hover.white {
+            background: #f7e8fc;
+        }
+        .button:active.white {
+            background: #eccafa;
+        }
+        .button:hover.purple {
+            background: #a66bbe;
+        }
+        .button:active {
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        .button:active.purple {
+            background: #8f4bab;
+        }
+        input[type="text"]::placeholder{color:#8f4bab;}
+        .forms{
+
+            outline: none;
+            display: inline-block;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            border-radius: 100px;
+            font-size: 16px;
+            width: 200px;
+            background: #fff;
+            color:#8f4bab;
+            padding: 12px 16px;
+            border-color: #8f4bab;
+            margin-top: 15px;
+        }
+        .head{
+            font-size: 32px;
+            color: #8f4bab;
+        }
+    </style>
+</head>
+<body>
+<div>
+<h2 class="head">Employee management</h2>
+    <button onclick="mainPage()" class="button purple" style="position: absolute;right: 20px;top: 20px;" >Exit</button>
+</div>
+<table id="usersList">
+
+</table>
+
+<form action="#">
+
+    <input id="user_name" class="forms" type="text" placeholder="Enter name" required title="Please enter the name">
+    <input id="user_login" class="forms" type="text" placeholder="Enter phone number" onkeyup="this.value = this.value.replace(/[^\d]/g,'');" pattern="8\d{10}"
+           title="Example: 8 (777) 777-77-77">
+    <input id="user_email"  class="forms" type="text" placeholder="Enter email" required title="Please enter the email">
+    <button onclick="createUser()" class="button purple">Create user</button>
+</form>
+
+<input id="search_field" class="forms" type="text" placeholder="Enter phone number" required title="Example: 8 (777) 777-77-77" onkeyup="this.value = this.value.replace(/[^\d]/g,'');" pattern="8\d{10}">
+<button onclick="searchByLogin()" class="button purple"  >Search by Phone</button>
+<button onclick="showAll()" class="button purple"  >Cancel</button>
+<script>
+    function mainPage(){
+        this.open("index.html");
+        window.close() ;
+    }
+    function showAll(){
+        window.location.reload();
+    }
+    function searchByLogin() {
+        var login = document.getElementById("search_field").value;
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                var user = JSON.parse(this.responseText);
+                var html = '<tr>\n' +
+                    '        <th>Id</th>\n' +
+                    '        <th>Name</th>\n' +
+                    '        <th>Phone number</th>\n' +
+                    '        <th>Email</th>\n' +
+                    '        <th>Delete</th>\n' +
+                    '    </tr>';
+                html = html + '<tr><td>' + user.id + '</td>\n' +
+                    '        <td>' + user.name + '</td>\n' +
+                    '        <td>' + user.login + '</td>\n' +
+                    '        <td>' + user.email + '</td>' +
+                    '        <td><button onclick="deleteUser(' + user.id + ')" class="button white" >Delete</button></td></tr>';
+                document.getElementById("usersList").innerHTML = html;
+            }
+        };
+        xhttp.open("GET", "http://localhost:8080/users/findByLogin?login=" + login, true);
+        xhttp.send();
+        document.getElementById("search_field").value="";
+    }
+
+    function deleteUser(userId) {
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("DELETE", "http://localhost:8080/users/delete/" + userId, true);
+        xhttp.send();
+        loadUsers();
+        window.location.reload();
+    }
+
+    function createUser() {
+        var userName = document.getElementById("user_name").value;
+        var userLogin = document.getElementById("user_login").value;
+        var userEmail = document.getElementById("user_email").value;
+
+        var xmlhttp = new XMLHttpRequest();   // new HttpRequest instance
+        xmlhttp.open("POST", "http://localhost:8080/users/save");
+        xmlhttp.setRequestHeader("Content-Type", "application/json");
+
+        xmlhttp.send(JSON.stringify({name: userName, login: userLogin, email: userEmail}));
+        document.getElementById("user_name").value="";
+        document.getElementById("user_login").value="";
+        document.getElementById("user_email").value="";
+        loadUsers();
+        window.location.reload();
+    }
+
+    function loadUsers() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                var users = JSON.parse(this.responseText);
+                var html = '<tr>\n' +
+                    '        <th>Id</th>\n' +
+                    '        <th>Name</th>\n' +
+                    '        <th>Phone number</th>\n' +
+                    '        <th>Email</th>\n' +
+                    '        <th>Delete</th>\n' +
+                    '    </tr>';
+                for (var i = 0; i < users.length; i++) {
+                    var user = users[i];
+                    console.log(user);
+                    html = html + '<tr><td>' + user.id + '</td>\n' +
+                        '        <td>' + user.name + '</td>\n' +
+                        '        <td>' + user.login + '</td>\n' +
+                        '        <td>' + user.email + '</td>' +
+                        '        <td><button onclick="deleteUser(' + user.id + ')" class="button white">Delete </button></td></tr>';
+
+                }
+                document.getElementById("usersList").innerHTML = html;
+            }
+        };
+        xhttp.open("GET", "http://localhost:8080/users/findAll", true);
+        xhttp.send();
+    }
+
+    loadUsers();
+</script>
+</body>
+</html>
